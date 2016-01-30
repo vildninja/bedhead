@@ -3,7 +3,6 @@ using System.Collections;
 
 public class Gnome : MonoBehaviour
 {
-
     private Animator animator;
 
 	// Use this for initialization

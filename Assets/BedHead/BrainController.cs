@@ -12,15 +12,20 @@ public class BrainController : MonoBehaviour
 
     public float dragForce;
 
+    public static float NextStep { get; private set; }
+
 	// Use this for initialization
 	IEnumerator Start ()
     {
         int index = 0;
 	    Renderer last = null;
 
+	    NextStep = Mathf.Ceil(Time.time + 1f);
+
 	    while (true)
 	    {
-	        yield return new WaitForSeconds(0.5f);
+	        yield return new WaitForSeconds(NextStep - Time.time);
+	        NextStep += 1f;
 
 	        if (last)
 	        {

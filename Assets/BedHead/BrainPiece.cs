@@ -6,7 +6,8 @@ public class BrainPiece : MonoBehaviour
 {
 
     private Text label;
-    private Rigidbody body;
+    [HideInInspector]
+    public Rigidbody body;
 
 	// Use this for initialization
 	void Start ()
@@ -15,8 +16,8 @@ public class BrainPiece : MonoBehaviour
 	    body = GetComponent<Rigidbody>();
 	}
 
-    public void Trigger()
+    public void Trigger(Vector3 from)
     {
-        body.AddForce(Vector3.up * 20, ForceMode.Impulse);
+        body.AddForceAtPosition(Vector3.up * 10, from, ForceMode.Impulse);
     }
 }

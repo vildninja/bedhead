@@ -11,7 +11,7 @@ public class SequenceStep : MonoBehaviour
     {
         foreach (var piece in touching)
         {
-            piece.Trigger();
+            piece.Trigger(transform.position);
         }
     }
 

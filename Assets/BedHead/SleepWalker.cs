@@ -12,6 +12,8 @@ public class SleepWalker : Walker
     private bool drinking;
     private bool turning;
     public bool IsJumping { get; private set; }
+
+    public AnimationCurve jumpCurve;
     
     void Start()
     {
@@ -27,14 +29,13 @@ public class SleepWalker : Walker
 
         var coffee = GameObject.Find("CoffeeMachine");
 
+        IsJumping = false;
         if (Vector3.Distance(coffee.transform.position, current) < 0.1f)
         {
             direction = coffee.transform.forward;
             animator.SetTrigger("Coffee");
             return;
         }
-
-        IsJumping = false;
 
         while (instructions.Count > 0)
         {
@@ -63,9 +64,20 @@ public class SleepWalker : Walker
             }
         }
 
-        if (Physics.Raycast(current + new Vector3(0, IsJumping ? 0.5f : 0.15f, 0), direction, 1f))
+        if (Physics.Raycast(current + new Vector3(0, 0.5f, 0), direction, 1f))
         {
             direction = -direction;
+        }
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        if (IsJumping)
+        {
+            var pos = transform.position;
+            pos.y = jumpCurve.Evaluate(BrainController.StepT);
+            transform.position = pos;
         }
     }
 }

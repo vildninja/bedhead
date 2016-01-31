@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 
@@ -9,9 +10,6 @@ public class BrainController : MonoBehaviour
     public SequenceStep[] sequence;
     public Material inactive;
     public Material active;
-
-    private BrainPiece selected;
-    private Vector3 local;
 
     public float dragForce;
 
@@ -23,12 +21,22 @@ public class BrainController : MonoBehaviour
 
     public LayerMask touchMask;
 
-	// Use this for initialization
+    private readonly List<BrainPiece> chain = new List<BrainPiece>();
+
+    public List<ParticleSystem> connections;
+    private int overheat = 0;
+
+        // Use this for initialization
 	IEnumerator Start ()
     {
         int index = 0;
 	    Renderer last = null;
 	    var walkers = FindObjectsOfType<Walker>();
+
+	    for (int i = 1; i < 1; i++)
+	    {
+	        connections.Add(Instantiate(connections[0]));
+	    }
 
 	    var brainPieces = FindObjectsOfType<BrainPiece>();
 	    for (int i = 0; i < brainPieces.Length; i++)
@@ -38,13 +46,36 @@ public class BrainController : MonoBehaviour
 	            actions = actions.OrderBy(s => Guid.NewGuid()).ToArray();
             }
 	        brainPieces[i].label.text = actions[i%actions.Length];
+	        if (chain.Count == 0 && brainPieces[i].label.text == "")
+	        {
+	            chain.Add(brainPieces[i]);
+	        }
 	    }
 
 	    NextStep = Time.time + StepLength;
 
 	    while (true)
-	    {
-	        yield return new WaitForSeconds(NextStep - Time.time);
+        {
+            for (int i = 0; i < chain.Count; i++)
+            {
+                chain[i].Select((chain.Count - i) / (float)chain.Count);
+            }
+
+            yield return new WaitForSeconds(NextStep - Time.time);
+
+            if (chain.Count > 1)
+            {
+                chain[0].Select(0);
+                chain.RemoveAt(0);
+                overheat = 0;
+
+                chain[0].Trigger(Vector3.zero);
+            }
+            else
+            {
+                overheat++;
+            }
+
 	        NextStep += StepLength;
 
 	        if (last)
@@ -73,77 +104,46 @@ public class BrainController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
-	    if (Input.GetMouseButtonDown(0))
+	    if (Input.GetMouseButtonDown(0) && chain.Count < 2)
 	    {
 	        RaycastHit hit;
 	        if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 50, touchMask))
 	        {
-	            selected = hit.collider.GetComponentInParent<BrainPiece>();
+	            var selected = hit.collider.GetComponentInParent<BrainPiece>();
 	            if (selected)
 	            {
-	                local = selected.transform.InverseTransformPoint(hit.point);
-                    selected.body.drag = 5f;
-                    selected.body.angularDrag = 5f;
+                    chain.Add(selected);
                 }
 	        }
 	    }
-	    if (Input.GetMouseButtonUp(0))
-	    {
-	        if (selected)
+
+
+        bool pointAtMouse = true;
+        for (int i = 0; i < connections.Count; i++)
+        {
+            if (chain.Count <= i + 1)
             {
-                selected.body.drag = 0.2f;
-                selected.body.angularDrag = 0.2f;
+                if (pointAtMouse && chain.Count > i)
+                {
+                    pointAtMouse = false;
+
+                    var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    var dif = chain[i].transform.position.z - ray.origin.z;
+                    var mouse = ray.origin + ray.direction * dif;
+
+                    connections[i].transform.position = chain[i].transform.position + new Vector3(0, 0, -0.4f);
+                    connections[i].transform.LookAt(mouse + new Vector3(0, 0, -0.4f), Vector3.back);
+                    connections[i].startLifetime = Vector3.Distance(chain[i].transform.position, mouse) / 5;
+                    continue;
+                }
+
+                connections[i].transform.position = new Vector3(0, -1000, 0);
+                continue;
             }
-	        selected = null;
-	    }
 
-        //if (Input.GetMouseButtonDown(0))
-        //{
-        //    RaycastHit hit;
-        //    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 50, touchMask))
-        //    {
-        //        selected = hit.collider.GetComponentInParent<BrainPiece>();
-        //        if (selected)
-        //        {
-        //            local = selected.transform.InverseTransformPoint(hit.point);
-        //            selected.body.drag = 5f;
-        //            selected.body.angularDrag = 5f;
-        //        }
-        //    }
-        //}
-        //if (Input.GetMouseButtonUp(0))
-        //{
-        //    if (selected)
-        //    {
-        //        selected.body.drag = 0.2f;
-        //        selected.body.angularDrag = 0.2f;
-        //    }
-        //    selected = null;
-        //}
-    }
-
-    void FixedUpdate()
-    {
-        if (selected == null)
-        {
-            return;
+            connections[i].transform.position = chain[i].transform.position + new Vector3(0, 0, -0.4f);
+            connections[i].transform.LookAt(chain[i + 1].transform.position + new Vector3(0, 0, -0.4f), Vector3.back);
+            connections[i].startLifetime = Vector3.Distance(chain[i].transform.position, chain[i + 1].transform.position) / 5;
         }
-
-        var current = selected.transform.TransformPoint(local);
-        current.z = transform.position.z;
-
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        float dif = transform.position.z - ray.origin.z;
-
-        var target = ray.origin + ray.direction*dif;
-
-        var force = (target - current);
-
-        if (force.magnitude > 1)
-        {
-            force.Normalize();
-        }
-
-        selected.body.AddForceAtPosition(force * dragForce, current);
     }
 }

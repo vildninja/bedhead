@@ -17,18 +17,18 @@ public class BrainPiece : MonoBehaviour
 	{
 	    label = GetComponentInChildren<Text>();
 	    body = GetComponent<Rigidbody>();
+        input = GetComponentInChildren<ParticleSystem>();
 	}
 
     public void Trigger(Vector3 from)
     {
-        body.AddForceAtPosition(Vector3.up * 10, from, ForceMode.Impulse);
+        //body.AddForceAtPosition(Vector3.up * 10, from, ForceMode.Impulse);
 
         FindObjectOfType<SleepWalker>().instructions.Enqueue(label.text);
     }
 
-    public void Select(Color color)
+    public void Select(float power)
     {
-        input.startColor = color;
-        input.Play();
+        input.emissionRate = power*40;
     }
 }

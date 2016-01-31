@@ -9,15 +9,13 @@ public class BrainPiece : MonoBehaviour
     [HideInInspector]
     public Rigidbody body;
 
-    private ParticleSystem input;
-    private ParticleSystem output;
+    public BrainPiece[] neighbours;
 
     // Use this for initialization
-    void Start ()
+    void Awake ()
 	{
 	    label = GetComponentInChildren<Text>();
 	    body = GetComponent<Rigidbody>();
-        input = GetComponentInChildren<ParticleSystem>();
 	}
 
     public void Trigger(Vector3 from)
@@ -27,8 +25,23 @@ public class BrainPiece : MonoBehaviour
         FindObjectOfType<SleepWalker>().instructions.Enqueue(label.text);
     }
 
-    public void Select(float power)
+    public void Select(Material material)
     {
-        input.emissionRate = power*40;
+        GetComponentInChildren<MeshRenderer>().sharedMaterial = material;
+    }
+
+    void OnDrawGizmos()
+    {
+        if (neighbours == null)
+        {
+            return;
+        }
+
+        Gizmos.color = Color.red;
+
+        for (int i = 0; i < neighbours.Length; i++)
+        {
+            Gizmos.DrawLine(transform.position, Vector3.Lerp(transform.position, neighbours[i].transform.position, 0.5f));
+        }
     }
 }

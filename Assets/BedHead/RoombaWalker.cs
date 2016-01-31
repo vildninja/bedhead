@@ -10,9 +10,19 @@ public class RoombaWalker : Walker
     {
         base.Tick();
 
-        if (Physics.Raycast(current + new Vector3(0, 0.15f, 0), direction, 1f, mask))
+        walking = false;
+        for (int i = 0; i < 4; i++)
         {
-            direction = Vector3.Cross(direction, turnLeft ? Vector3.up : Vector3.down);
+            if (Physics.Raycast(current + new Vector3(0, 0.15f, 0), direction, 1f, mask))
+            {
+                direction = Vector3.Cross(direction, turnLeft ? Vector3.up : Vector3.down);
+            }
+            else
+            {
+                BrainController.Instance.Reserve(current + direction);
+                walking = true;
+                break;
+            }
         }
     }
 }

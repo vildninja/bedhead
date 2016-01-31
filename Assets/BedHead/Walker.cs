@@ -10,6 +10,8 @@ public class Walker : MonoBehaviour
     public Vector3 direction = Vector3.back;
     [HideInInspector]
     public Vector3 current;
+    [HideInInspector]
+    public bool walking;
     
     public virtual void Awake()
     {
@@ -38,7 +40,7 @@ public class Walker : MonoBehaviour
 
     public virtual void FixedUpdate()
     {
-        var target = current + direction * (BrainController.StepT + 0.1f);
+        var target = current + direction * (walking ? BrainController.StepT + 0.1f : 0f);
         var vel = (target - transform.position) * 10 / BrainController.StepLength;
         body.velocity = vel;
     }

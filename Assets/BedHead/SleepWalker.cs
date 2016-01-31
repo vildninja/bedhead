@@ -8,9 +8,6 @@ public class SleepWalker : Walker
 
     public readonly Queue<string> instructions = new Queue<string>();
     
-    private bool walking;
-    private bool drinking;
-    private bool turning;
     public bool IsJumping { get; private set; }
 
     public AnimationCurve jumpCurve;
@@ -18,7 +15,6 @@ public class SleepWalker : Walker
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
-        animator.SetBool("Walking", true);
 
         Tick();
     }
@@ -34,6 +30,7 @@ public class SleepWalker : Walker
         {
             direction = coffee.transform.forward;
             animator.SetTrigger("Coffee");
+            walking = false;
             return;
         }
 
@@ -54,9 +51,6 @@ public class SleepWalker : Walker
                 case "Right":
                     direction = Vector3.Cross(direction, Vector3.down);
                     break;
-                case "Drink":
-                    drinking = true;
-                    break;
                 case "Jump":
                     IsJumping = true;
                     animator.SetTrigger("Jump");
@@ -64,10 +58,22 @@ public class SleepWalker : Walker
             }
         }
 
-        if (Physics.Raycast(current + new Vector3(0, 0.5f, 0), direction, 1f))
+        walking = false;
+        for (int i = 0; i < 2; i++)
         {
-            direction = -direction;
+            if (Physics.Raycast(current + new Vector3(0, 0.5f, 0), direction, 1f))
+            {
+                direction = -direction;
+            }
+            else
+            {
+                BrainController.Instance.Reserve(current + direction);
+                walking = true;
+                break;
+            }
         }
+
+        animator.SetBool("Walking", walking);
     }
 
     public override void Update()

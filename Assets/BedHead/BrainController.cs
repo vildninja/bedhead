@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
+using UnityEngine.SceneManagement;
 
 public class BrainController : MonoBehaviour
 {
@@ -34,16 +34,18 @@ public class BrainController : MonoBehaviour
     private BrainPiece nextBrain;
 
     private readonly HashSet<BrainPiece> deadBrains = new HashSet<BrainPiece>(); 
-
-
-    public List<ParticleSystem> connections;
-    private int overheat = 0;
+    
 
     private int reservedIndex;
-    public List<Transform> reserved; 
+    public List<Transform> reserved;
+
+    private int failCount = 0;
+    private static int levelToLoad;
+    public GameObject[] levels;
 
     void Awake()
     {
+        levels[levelToLoad++%levels.Length].SetActive(true);
         Instance = this;
     }
 
@@ -63,11 +65,6 @@ public class BrainController : MonoBehaviour
 	            walkers[walkers.Length - 1] = walkers[i];
 	            walkers[i] = temp;
 	        }
-	    }
-
-	    for (int i = 1; i < 1; i++)
-	    {
-	        connections.Add(Instantiate(connections[0]));
 	    }
 
 	    var brainPieces = FindObjectsOfType<BrainPiece>();
@@ -126,6 +123,16 @@ public class BrainController : MonoBehaviour
                 activeBrain.Select(brainActive);
 
                 activeBrain.Trigger(Vector3.zero);
+            }
+
+            if (selectable.Count == 0)
+            {
+                failCount++;
+                if (failCount > 5)
+                {
+                    levelToLoad--;
+                    SceneManager.LoadScene(0);
+                }
             }
 
             //if (chain.Count > 1)

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class SleepWalker : Walker
 {
@@ -34,6 +35,8 @@ public class SleepWalker : Walker
         }
     }
 
+    private int coffeeTicks = 0;
+
     public override void Tick()
     {
         base.Tick();
@@ -65,6 +68,13 @@ public class SleepWalker : Walker
             direction = coffee.transform.forward;
             animator.SetTrigger("Coffee");
             walking = false;
+            coffeeTicks++;
+
+            if (coffeeTicks > 4)
+            {
+                SceneManager.LoadScene(0);
+            }
+
             return;
         }
 

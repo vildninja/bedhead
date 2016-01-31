@@ -6,17 +6,32 @@ public class SleepWalker : Walker
 {
     private Animator animator;
 
-    public readonly Queue<string> instructions = new Queue<string>();
+    private readonly Queue<string> instructions = new Queue<string>();
     
     public bool IsJumping { get; private set; }
 
     public AnimationCurve jumpCurve;
+
+    private LayerMask houseOnly;
+    private LayerMask everything;
     
     void Start()
     {
         animator = GetComponentInChildren<Animator>();
 
+        houseOnly = LayerMask.GetMask("House");
+        everything = LayerMask.GetMask("House", "Default");
+
         Tick();
+    }
+
+    public void Instruct(string instruction)
+    {
+        instructions.Enqueue(instruction);
+        if (instruction == "Jump")
+        {
+            GetComponent<Collider>().enabled = false;
+        }
     }
 
     public override void Tick()
@@ -25,7 +40,26 @@ public class SleepWalker : Walker
 
         var coffee = GameObject.Find("CoffeeMachine");
 
-        IsJumping = false;
+        if (IsJumping)
+        {
+            IsJumping = false;
+
+            var overlaps = Physics.OverlapSphere(transform.position + new Vector3(0, 0.5f, 0), 0.4f);
+            for (int i = 0; i < overlaps.Length; i++)
+            {
+                if (overlaps[i].transform.root != transform)
+                {
+                    IsJumping = true;
+                    animator.SetTrigger("Jump");
+                    walking = false;
+                    return;
+                }
+            }
+
+            GetComponent<Collider>().enabled = true;
+        }
+
+
         if (Vector3.Distance(coffee.transform.position, current) < 0.1f)
         {
             direction = coffee.transform.forward;
@@ -61,11 +95,11 @@ public class SleepWalker : Walker
         walking = false;
         for (int i = 0; i < 2; i++)
         {
-            if (Physics.Raycast(current + new Vector3(0, 0.5f, 0), direction, 1f))
+            if (Physics.Raycast(current + new Vector3(0, 0.5f, 0), direction, 1f, IsJumping ? houseOnly : everything))
             {
                 direction = -direction;
             }
-            else
+            else if (!IsJumping)
             {
                 BrainController.Instance.Reserve(current + direction);
                 walking = true;

@@ -54,6 +54,17 @@ public class BrainController : MonoBehaviour
 	    Renderer last = null;
 	    var walkers = FindObjectsOfType<Walker>();
 
+        // make sure to give sleepWalker lowest priority
+	    for (int i = 0; i < walkers.Length - 1; i++)
+	    {
+	        if (walkers[i] is SleepWalker)
+	        {
+	            var temp = walkers[walkers.Length - 1];
+	            walkers[walkers.Length - 1] = walkers[i];
+	            walkers[i] = temp;
+	        }
+	    }
+
 	    for (int i = 1; i < 1; i++)
 	    {
 	        connections.Add(Instantiate(connections[0]));
@@ -142,9 +153,9 @@ public class BrainController : MonoBehaviour
                 index = 0;
             }
 
-            sequence[index].Trigger();
-            last = sequence[index].GetComponentInChildren<Renderer>();
-            last.material = active;
+            //sequence[index].Trigger();
+            //last = sequence[index].GetComponentInChildren<Renderer>();
+            //last.material = active;
 
 	        for (int i = 0; i < walkers.Length; i++)
 	        {

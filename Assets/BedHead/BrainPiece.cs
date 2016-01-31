@@ -22,7 +22,7 @@ public class BrainPiece : MonoBehaviour
     {
         //body.AddForceAtPosition(Vector3.up * 10, from, ForceMode.Impulse);
 
-        FindObjectOfType<SleepWalker>().instructions.Enqueue(label.text);
+        FindObjectOfType<SleepWalker>().Instruct(label.text);
     }
 
     public void Select(Material material)
